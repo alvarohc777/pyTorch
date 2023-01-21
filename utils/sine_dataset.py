@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from random import getrandbits
 
 
-def sine_harmonic(t, fs=3480, N=64, fundamental=60, harmonic=1, magnitude=1, phi=0):
+def sine_harmonic(t, fs=3840, N=64, fundamental=60, harmonic=1, magnitude=1, phi=0):
     wt = 2 * np.pi * fs * t
     n = harmonic
     phi = phi
