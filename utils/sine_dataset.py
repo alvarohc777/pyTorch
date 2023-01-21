@@ -2,22 +2,19 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-fs = 3840
-N = 64
-t = np.linspace(0, N / fs, N)
-m = 1000
-
-# Initialize signals vector
-signals = t
-target = np.array([0])
-print(t[-1])
-mag_i = 0.01
-mag_f = 100
-
 
 def sine_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
     for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
         signal = np.array(magnitude * np.sin(2 * np.pi * fs * t))
+        signals = np.vstack((signals, signal))
+        target = np.vstack((target, np.array(1)))
+    return signals, target
+
+
+def sine_phase_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+        phi = np.random.normal(-np.pi, np.pi)
+        signal = magnitude * np.sin(2 * np.pi * fs * t + phi)
         signals = np.vstack((signals, signal))
         target = np.vstack((target, np.array(1)))
     return signals, target
@@ -53,7 +50,7 @@ def slope_creator(signals, target, t, N, m):
     return signals, target
 
 
-def signal_dataset_creator(fs, N, m, mag_i, mag_f):
+def signal_dataset_creator(fs, N, m, mag_i=0.01, mag_f=100):
 
     t = np.linspace(0, N / fs, N)
 
@@ -61,7 +58,8 @@ def signal_dataset_creator(fs, N, m, mag_i, mag_f):
     signals = t
     target = np.array([0])
 
-    signals, target = sine_creator(signals, target, t, fs, m)
+    # signals, target = sine_creator(signals, target, t, fs, m)
+    signals, target = sine_phase_creator(signals, target, t, fs, m)
     signals, target = gaussian_creator(signals, target, N, m)
     signals, target = constant_creator(signals, target, N, m)
     signals, target = slope_creator(signals, target, t, N, m)
@@ -69,18 +67,35 @@ def signal_dataset_creator(fs, N, m, mag_i, mag_f):
     return signals, target
 
 
-signals, target = signal_dataset_creator(fs, N, m, mag_i, mag_f)
-print(signals.shape)
-print(target.shape)
+def main():
 
-plt.stem(signals[10])
-plt.show()
+    fs = 3840
+    N = 64
+    t = np.linspace(0, N / fs, N)
+    m = 1000
 
-# Para poder utilizar como input de LSTM
-#   esta espera (m, N, s), donde s son cantidad de señales
-#   en este caso solo hay una señal
-signals = np.expand_dims(signals, axis=2)
-signals = torch.from_numpy(signals).float()
-target = torch.from_numpy(target).float()
-print(target.shape)
-print(signals.shape)
+    # Initialize signals vector
+    signals = t
+    target = np.array([0])
+    print(t[-1])
+    mag_i = 0.01
+    mag_f = 100
+    signals, target = signal_dataset_creator(fs, N, m, mag_i, mag_f)
+    print(signals.shape)
+    print(target.shape)
+
+    plt.stem(signals[10])
+    plt.show()
+
+    # Para poder utilizar como input de LSTM
+    #   esta espera (m, N, s), donde s son cantidad de señales
+    #   en este caso solo hay una señal
+    signals = np.expand_dims(signals, axis=2)
+    signals = torch.from_numpy(signals).float()
+    target = torch.from_numpy(target).float()
+    print(target.shape)
+    print(signals.shape)
+
+
+if __name__ == "__main__":
+    main()
