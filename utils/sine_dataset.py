@@ -14,10 +14,10 @@ def sine_harmonic(t, fs=3840, N=64, fundamental=60, harmonic=1, magnitude=1, phi
     return signal
 
 
-def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6):
     for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
         phi = np.random.normal(-np.pi, np.pi)
-        harmonic = np.random.normal(1, 8)
+        harmonic = np.random.normal(1, harmonics)
         signal = sine_harmonic(t, phi=phi, harmonic=harmonic, magnitude=magnitude)
         signals = np.vstack((signals, signal))
         target = np.vstack((target, np.array(1)))
@@ -123,12 +123,26 @@ def signal_dataset_creator(fs, N, m, mag_i=0.01, mag_f=100):
     target = np.array([0])
 
     # signals, target = sine_creator(signals, target, t, fs, m)
-    signals, target = sine_phase_creator(signals, target, t, fs, m)
+    signals, target = sine_phase_creator(
+        signals, target, t, fs, m, mag_i=0.01, mag_f=100
+    )
     signals, target = gaussian_creator(signals, target, N, m)
     signals, target = constant_creator(signals, target, N, m)
     signals, target = slope_creator(signals, target, t, N, m)
 
     return signals, target
+
+
+def signal_dataset_harmonic_creator(fs, N, m, mag_i=0.01, mag_f=100, harmonics=6):
+    t = np.linspace(0, N / fs, N)
+    signals = t
+    target = np.array([0])
+    signals, target = sine_harmonics(
+        signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6
+    )
+    signals, target = gaussian_creator(signals, target, N, m)
+    signals, target = constant_creator(signals, target, N, m)
+    signals, target = slope_creator(signals, target, t, N, m)
 
 
 def main():
