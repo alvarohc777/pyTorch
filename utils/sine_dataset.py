@@ -21,6 +21,10 @@ def sine_phase_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
     return signals, target
 
 
+# def sine_noise(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+#     for magnitude in
+
+
 def gaussian_creator(
     signals,
     target,
