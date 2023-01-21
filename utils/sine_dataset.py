@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+from random import getrandbits
 
 
 def sine_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
@@ -44,6 +45,9 @@ def constant_creator(signals, target, N, m):
 
 def slope_creator(signals, target, t, N, m):
     for slope in range(int(m / 6)):
+        positive_slope = bool(getrandbits(1))
+        if not positive_slope:
+            slope = -slope
         signal = slope * t
         signals = np.vstack((signals, signal))
         target = np.vstack((target, np.array(0)))
