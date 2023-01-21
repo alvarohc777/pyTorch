@@ -17,10 +17,10 @@ def sine_harmonic(t, fs=3840, N=64, fundamental=60, harmonic=1, magnitude=1, phi
 def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6):
     for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
         phi = np.random.normal(-np.pi, np.pi)
-        harmonic = np.random.normal(1, harmonics)
+        harmonic = np.random.randint(1, harmonics)
         signal = sine_harmonic(t, phi=phi, harmonic=harmonic, magnitude=magnitude)
         signals = np.vstack((signals, signal))
-        target = np.vstack((target, np.array(1)))
+        target = np.vstack((target, np.array(harmonic)))
     return signals, target
 
 
