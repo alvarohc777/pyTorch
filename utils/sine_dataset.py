@@ -21,8 +21,16 @@ def sine_phase_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
     return signals, target
 
 
-# def sine_noise(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
-#     for magnitude in
+def sine_noise(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+        x = np.random.uniform()
+        scale_var = 30 * x + 20
+        gauss = np.random.normal(scale=magnitude / scale_var, size=len(t))
+        phi = np.random.normal(-np.pi, np.pi)
+        signal = magnitude * np.sin(2 * np.pi * fs * t + phi)
+        signals = np.vstack((signals, signal + gauss))
+        target = np.vstack((target, np.array(1)))
+    return signals, target
 
 
 def gaussian_creator(
