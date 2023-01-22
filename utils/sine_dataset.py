@@ -20,7 +20,8 @@ def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6
         harmonic = np.random.randint(1, harmonics)
         signal = sine_harmonic(t, phi=phi, harmonic=harmonic, magnitude=magnitude)
         signals = np.vstack((signals, signal))
-        target = np.vstack((target, np.array(harmonic)))
+        # target = np.vstack((target, np.array(harmonic)))
+        target = np.vstack((target, np.array(1)))
     return signals, target
 
 
@@ -143,6 +144,7 @@ def signal_dataset_harmonic_creator(fs, N, m, mag_i=0.01, mag_f=100, harmonics=6
     signals, target = gaussian_creator(signals, target, N, m)
     signals, target = constant_creator(signals, target, N, m)
     signals, target = slope_creator(signals, target, t, N, m)
+    return signals, target
 
 
 def main():
