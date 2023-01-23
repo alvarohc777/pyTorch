@@ -14,14 +14,19 @@ def sine_harmonic(t, fs=3840, N=64, fundamental=60, harmonic=1, magnitude=1, phi
     return signal
 
 
-def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6):
-    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+def sine_harmonics(
+    signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6, multiclass=False
+):
+    for magnitude in np.linspace(mag_i, mag_f, int(m * ((harmonics - 1) / harmonics))):
         phi = np.random.normal(-np.pi, np.pi)
-        harmonic = np.random.randint(1, harmonics)
+        harmonic = np.random.randint(1, harmonics + 1)
         signal = sine_harmonic(t, phi=phi, harmonic=harmonic, magnitude=magnitude)
         signals = np.vstack((signals, signal))
         # target = np.vstack((target, np.array(harmonic)))
-        target = np.vstack((target, np.array(1)))
+        if multiclass == False:
+            target = np.vstack((target, np.array(1)))
+        else:
+            target = np.append(target, harmonic - 1)
     return signals, target
 
 
@@ -134,16 +139,26 @@ def signal_dataset_creator(fs, N, m, mag_i=0.01, mag_f=100):
     return signals, target
 
 
-def signal_dataset_harmonic_creator(fs, N, m, mag_i=0.01, mag_f=100, harmonics=6):
+def signal_dataset_harmonic_creator(
+    fs, N, m, mag_i=0.01, mag_f=100, harmonics=6, multiclass=False
+):
     t = np.linspace(0, N / fs, N)
     signals = t
     target = np.array([0])
     signals, target = sine_harmonics(
-        signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=6
+        signals,
+        target,
+        t,
+        fs,
+        m,
+        mag_i=0.01,
+        mag_f=100,
+        harmonics=harmonics,
+        multiclass=multiclass,
     )
-    signals, target = gaussian_creator(signals, target, N, m)
-    signals, target = constant_creator(signals, target, N, m)
-    signals, target = slope_creator(signals, target, t, N, m)
+    # signals, target = gaussian_creator(signals, target, N, m)
+    # signals, target = constant_creator(signals, target, N, m)
+    # signals, target = slope_creator(signals, target, t, N, m)
     return signals, target
 
 
