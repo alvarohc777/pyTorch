@@ -30,33 +30,19 @@ def sine_harmonics(
     return signals, target
 
 
-def sine_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
-    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
-        signal = np.array(magnitude * np.sin(2 * np.pi * fs * t))
-        signals = np.vstack((signals, signal))
-        target = np.vstack((target, np.array(1)))
-    return signals, target
-
-
-def sine_phase_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
-    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=3):
+    for magnitude in np.linspace(mag_i, mag_f, m):
         phi = np.random.normal(-np.pi, np.pi)
-        signal = magnitude * np.sin(2 * np.pi * fs * t + phi)
+        harmonic_list = np.random.binomial(1, 0.5, size=harmonics)
+        wt = 2 * np.pi * fs * t
+        phi_a = float(0) * np.pi / 180
+        phi_a = phi_a + phi
+        signal = np.zeros(len(t))
+        for index, harmonic in enumerate(harmonic_list):
+            harmonic = (index + 1) * harmonic
+            signal += magnitude * np.sin(harmonic * (wt + phi_a))
         signals = np.vstack((signals, signal))
-        target = np.vstack((target, np.array(1)))
-    return signals, target
-
-
-# Crear esto como una transformación para los datos de entrada
-def sine_noise(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
-    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
-        x = np.random.uniform()
-        scale_var = 30 * x + 20
-        gauss = np.random.normal(scale=magnitude / scale_var, size=len(t))
-        phi = np.random.normal(-np.pi, np.pi)
-        signal = magnitude * np.sin(2 * np.pi * fs * t + phi)
-        signals = np.vstack((signals, signal + gauss))
-        target = np.vstack((target, np.array(1)))
+        target = np.vstack((target, harmonic_list))
     return signals, target
 
 
@@ -85,6 +71,36 @@ def synthetic_signal(t, harmonics=[60], fundamental=60):
         C += 100 * np.sin(n * (wt + ang_C))
 
     return np.array((A, B, C))
+
+
+def sine_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+        signal = np.array(magnitude * np.sin(2 * np.pi * fs * t))
+        signals = np.vstack((signals, signal))
+        target = np.vstack((target, np.array(1)))
+    return signals, target
+
+
+def sine_phase_creator(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+        phi = np.random.normal(-np.pi, np.pi)
+        signal = magnitude * np.sin(2 * np.pi * fs * t + phi)
+        signals = np.vstack((signals, signal))
+        target = np.vstack((target, np.array(1)))
+    return signals, target
+
+
+# Crear esto como una transformación para los datos de entrada
+def sine_noise(signals, target, t, fs, m, mag_i=0.01, mag_f=100):
+    for magnitude in np.linspace(mag_i, mag_f, int(m / 2)):
+        x = np.random.uniform()
+        scale_var = 30 * x + 20
+        gauss = np.random.normal(scale=magnitude / scale_var, size=len(t))
+        phi = np.random.normal(-np.pi, np.pi)
+        signal = magnitude * np.sin(2 * np.pi * fs * t + phi)
+        signals = np.vstack((signals, signal + gauss))
+        target = np.vstack((target, np.array(1)))
+    return signals, target
 
 
 def gaussian_creator(
@@ -159,6 +175,16 @@ def signal_dataset_harmonic_creator(
     # signals, target = gaussian_creator(signals, target, N, m)
     # signals, target = constant_creator(signals, target, N, m)
     # signals, target = slope_creator(signals, target, t, N, m)
+    return signals, target
+
+
+def signal_dataset_multilabel(fs, N, m, mag_i=0.01, mag_f=100, harmonics=3):
+    t = np.linspace(0, N / fs, N)
+    signals = t
+    target = np.array(np.zeros(harmonics))
+    signals, target = sine_harmonics(
+        signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=3
+    )
     return signals, target
 
 
