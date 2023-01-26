@@ -30,7 +30,7 @@ def sine_harmonics(
     return signals, target
 
 
-def sine_harmonics(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=3):
+def sine_multilabel(signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=3):
     for magnitude in np.linspace(mag_i, mag_f, m):
         phi = np.random.normal(-np.pi, np.pi)
         harmonic_list = np.random.binomial(1, 0.5, size=harmonics)
@@ -172,9 +172,10 @@ def signal_dataset_harmonic_creator(
         harmonics=harmonics,
         multiclass=multiclass,
     )
-    # signals, target = gaussian_creator(signals, target, N, m)
-    # signals, target = constant_creator(signals, target, N, m)
-    # signals, target = slope_creator(signals, target, t, N, m)
+    if multiclass == False:
+        signals, target = gaussian_creator(signals, target, N, m)
+        signals, target = constant_creator(signals, target, N, m)
+        signals, target = slope_creator(signals, target, t, N, m)
     return signals, target
 
 
@@ -182,7 +183,7 @@ def signal_dataset_multilabel(fs, N, m, mag_i=0.01, mag_f=100, harmonics=3):
     t = np.linspace(0, N / fs, N)
     signals = t
     target = np.array(np.zeros(harmonics))
-    signals, target = sine_harmonics(
+    signals, target = sine_multilabel(
         signals, target, t, fs, m, mag_i=0.01, mag_f=100, harmonics=3
     )
     return signals, target
