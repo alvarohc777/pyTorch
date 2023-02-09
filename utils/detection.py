@@ -60,7 +60,7 @@ def detection_iter(FFT, fundamental, return_THD=False):
 
     HDF = []
     HDC = []
-    TRIP = [0]
+    TRIP = []
     print(f"FFT shape: {FFT.shape}")
     # print(f"fundamental: {fundamental.shape}")
     for FFT_window, fundamental in zip(FFT, fundamental):
