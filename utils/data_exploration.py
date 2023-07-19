@@ -95,7 +95,7 @@ def confusion_matrix(
 
 
 def signal_exploration(idx: int, dataset, model, device, plot_signal: bool = True):
-    signal, t, idx_min, idx_max, csv_name = dataset.get_event(idx)
+    signal, t, idx_min, idx_max, _ = dataset.get_event(idx)
     model.eval()
     if plot_signal == True:
         plt.plot(t, signal)
