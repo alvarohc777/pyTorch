@@ -133,7 +133,7 @@ def plot_confusion_matrix(metrics):
 
 
 def print_metrics(metrics):
-    print(f"{'Total windows:':.<30}{metrics['TOTAL']:4}")
+    print(f"{'Total Samples:':.<30}{metrics['TOTAL']:4}")
     print(f"{'True Positives:':.<30}{metrics['TP']:4}")
     print(f"{'False Positives:':.<30}{metrics['FP']:4}")
     print(f"{'True Negatives:':.<30}{metrics['TN']:4}")
@@ -146,3 +146,63 @@ def print_metrics(metrics):
         print(f"{'Positive Predictive Value:':.<30}{metrics['PPV']*100:>6.1f}%")
     except KeyError:
         print(f"PPV divided by 0. No positive class predicted")
+
+
+def test_result(df: pd.DataFrame) -> tuple[int, int, int, int]:
+    p = df[df["True label"] == 1].event_idx.value_counts().shape[0]
+    n = df[df["True label"] == 0].event_idx.value_counts().shape[0]
+    tp = test_result_count(df, "TP", 1)
+    fp = test_result_count(df, "FP", 0)
+    tn = n - fp
+    fn = p - tp
+    print(
+        f"True Positives: {tp} \nFalse Positives: {fp} \nTrue Negatives: {tn} \nFalse Negatives: {fn}"
+    )
+    return tp, fp, tn, fn
+
+
+def test_result_count(
+    df: pd.DataFrame, expected_result: str, Label: int, includes=True
+) -> int:
+    if includes:
+        test_result_df = df[
+            (df["Result"] == expected_result) & (df["True label"] == Label)
+        ]
+    else:
+        test_result_df = df[
+            (df["Result"] != expected_result) & (df["True label"] == Label)
+        ]
+
+    test_result_count_per_event = test_result_df["event_idx"].value_counts()
+    return test_result_count_per_event.shape[0]
+
+
+def false_events_plots(false_events: pd.DataFrame, Title: str):
+    # df and plots settings
+    pd.set_option("display.float_format", "{:.2%}".format)
+    pd.options.plotting.backend = "matplotlib"
+    pd.set_option("display.max_rows", 2000)
+
+    false_events_plot = false_events.groupby(["window idx"])["window idx"].count()
+
+    if len(false_events_plot) > 0:
+        print(Title.upper())
+        print(f"Total ")
+        print(false_events)
+        false_events.groupby(["event_idx"])["event_idx"].count().plot(kind="bar")
+        plt.title(f"{Title}s per Event")
+        plt.show()
+
+        false_events_plot.plot(kind="bar", edgecolor="black")
+        plt.title(f"{Title} per Window Index")
+        plt.show()
+
+        limits_range = (
+            range(6) if (false_events["Pred probability"].min() < 0.5) else range(5, 11)
+        )
+        print(f"LIMITS RANGE {limits_range}")
+        false_events["Pred probability"].value_counts(
+            bins=[i * 0.1 for i in limits_range], sort=False, normalize=True
+        ).plot(kind="bar")
+        plt.title(f"{Title} probability per time interval")
+        plt.show()
