@@ -123,11 +123,17 @@ def plot_confusion_matrix(metrics):
         z,
         text_auto=True,
         template="seaborn",
-        labels=dict(x="Predicted Label", y="Real Label", color="Predictions"),
+        # labels=dict(x="Predicted Label", y="Real Label", color="Predictions"),
+        labels=dict(x="Predicted Label", y="Real Label"),
+        color_continuous_scale="gray",
         x=["Positive", "Negative"],
         y=["Positive", "Negative"],
         width=400,
         height=300,
+    )
+    fig.update_layout(
+        font=dict(family="Times New Roman", size=16),  # Set the font family and size
+        yaxis=dict(title="Real Label", tickangle=-90),
     )
     fig.show()
 
