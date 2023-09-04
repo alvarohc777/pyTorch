@@ -178,6 +178,15 @@ def test_result_count(
 
 
 def false_events_plots(false_events: pd.DataFrame, Title: str):
+    """_summary_
+
+    Parameters
+    ----------
+    false_events : pd.DataFrame
+        _description_
+    Title : str
+        _description_
+    """
     # df and plots settings
     pd.set_option("display.float_format", "{:.2%}".format)
     pd.options.plotting.backend = "matplotlib"
@@ -206,3 +215,32 @@ def false_events_plots(false_events: pd.DataFrame, Title: str):
         ).plot(kind="bar")
         plt.title(f"{Title} probability per time interval")
         plt.show()
+
+
+def trip_percentage(df: pd.DataFrame, fs: int = (60 * 64)) -> pd.Series:
+    """_summary_
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Pandas dataframe with following columns:
+            window idx | event_idx | Pred probability | Pred label | True label | Result
+    fs : int, optional
+        Sampling frequency of the system, by default (60 * 64)
+
+    Returns
+    -------
+    pd.Series
+        Returns count of all trips by window index. (trips vs window_idx)
+    """
+    df = df[df["True label"] == 1]
+    events_amount = len(df.groupby("event_idx"))
+    df = df[df["True label"] == 1]
+    df = df[df["Pred label"] == df["True label"]]
+    df = df.groupby("event_idx").first()
+    df = df.groupby("window idx").size()
+    df.index = df.index / fs * 1000
+    df = df / events_amount
+    df = df.cumsum()
+
+    return df
