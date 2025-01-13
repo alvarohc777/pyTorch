@@ -8,6 +8,9 @@ import plotly.express as px
 
 from torchmetrics.functional.classification import binary_stat_scores
 
+# Set
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 def conf_matrix_metrics(conf_matrix: torch.LongTensor) -> dict:
     """
@@ -61,8 +64,6 @@ def conf_matrix_metrics(conf_matrix: torch.LongTensor) -> dict:
 
 
 # Data visualization (CPU)
-
-
 def confusion_matrix_labels(pred_label, true_label):
     label = ""
     if int(pred_label) == int(true_label):
@@ -94,26 +95,31 @@ def confusion_matrix(
     return df
 
 
-def signal_exploration(idx: int, dataset, model, device, plot_signal: bool = True):
-    signal, t, idx_min, idx_max, _ = dataset.get_event(idx)
-    model.eval()
-    if plot_signal == True:
-        plt.plot(t, signal)
-        plt.show()
+def signal_exploration(event_idx, dataset, model, plot: bool = False):
+    window_indices = dataset.get_indices_event(event_idx)
     conf_matrix = torch.zeros(1, 5, dtype=torch.int64).to(device)
     preds = torch.empty((0, 1)).to(device)
     labels = torch.empty((0, 1)).to(device)
-    for i in range(idx_min, idx_max + 1):
-        signal, y = dataset.__getitem__(i)
-        y = torch.unsqueeze(y, 0).to(device)
+    # plot signal
+    if plot:
+        signals, label = dataset.get_event(event_idx)
+        t = dataset.get_time()
+        plt.plot(t, signals)
+        plt.show()
+
+    for idx in window_indices:
+        signal, label = dataset[idx]
+        label = torch.unsqueeze(label, 0).to(device)
         signal = torch.unsqueeze(signal, 0).to(device)
         pred = model(signal)
         preds = torch.cat((preds, pred), 0)
-        labels = torch.cat((labels, y), 0)
-        conf_matrix = conf_matrix.add(binary_stat_scores(pred, y))
+        labels = torch.cat((labels, label), 0)
+        conf_matrix = conf_matrix.add(binary_stat_scores(pred, label))
     df = confusion_matrix(preds, labels)
-    df.insert(loc=0, column="event_idx", value=np.repeat(idx, idx_max - idx_min + 1))
-
+    max_idx, min_idx = window_indices[-1], window_indices[0]
+    df.insert(
+        loc=0, column="event_idx", value=np.repeat(event_idx, max_idx - min_idx + 1)
+    )
     return df, conf_matrix
 
 
@@ -139,19 +145,45 @@ def plot_confusion_matrix(metrics):
 
 
 def print_metrics(metrics):
-    print(f"{'Total Samples:':.<30}{metrics['TOTAL']:4}")
+    print(f"{'Total windows:':.<30}{metrics['TOTAL']:4}")
     print(f"{'True Positives:':.<30}{metrics['TP']:4}")
     print(f"{'False Positives:':.<30}{metrics['FP']:4}")
     print(f"{'True Negatives:':.<30}{metrics['TN']:4}")
     print(f"{'False Negatives:':.<30}{metrics['FN']:4}")
     print(f"{'Accuracy:':.<30}{metrics['ACC']*100:>6.1f}%")
-    print(f"{'True Positive Rate:':.<30}{metrics['TPR']*100:>6.1f}%")
-    print(f"{'False Positive Rate:':.<30}{metrics['FPR']*100:>6.1f}%")
-    print(f"{'True Negative Rate:':.<30}{metrics['TNR']*100:>6.1f}%")
+    try:
+        print(f"{'True Positive Rate:':.<30}{metrics['TPR']*100:>6.1f}%")
+    except ValueError:
+        print("TPR cannot be calculates, division by zero")
+    try:
+        print(f"{'False Positive Rate:':.<30}{metrics['FPR']*100:>6.1f}%")
+        print(f"{'True Negative Rate:':.<30}{metrics['TNR']*100:>6.1f}%")
+    except ValueError:
+        print("FPR and TNR cannot be calculates, division by zero")
+
     try:
         print(f"{'Positive Predictive Value:':.<30}{metrics['PPV']*100:>6.1f}%")
     except KeyError:
         print(f"PPV divided by 0. No positive class predicted")
+
+
+from tqdm import tqdm
+
+
+def dataframe_creation(dataset, model):
+    conf_matrix = torch.zeros(0, 5, dtype=torch.int64).to(device)
+    for idx in tqdm(range(dataset.len_events())):
+        df, CM = signal_exploration(idx, dataset, model)
+        conf_matrix = torch.cat((conf_matrix, CM))
+        if idx == 0:
+            dataset_df = df
+        else:
+            dataset_df = pd.concat([dataset_df, df])
+
+    dataset_df = dataset_df.reset_index()
+    dataset_df = dataset_df.rename(columns={"index": "window idx"})
+    conf_matrix_total = np.sum(conf_matrix.cpu().numpy(), axis=0)
+    return dataset_df, conf_matrix_total
 
 
 def test_result(df: pd.DataFrame) -> tuple[int, int, int, int]:
