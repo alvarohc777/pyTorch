@@ -6,9 +6,6 @@ import os
 
 signals.append("time")
 
-if __name__ == "__main__":
-    print(__name__)
-
 
 def repeated_clean(file):
     clean_file(
@@ -31,7 +28,7 @@ def safe_repeated_clean(file_path):
 
 # instalar tqdm, pyarrow y actualizar utils-tesis a versión más reciente
 if __name__ == "__main__":
-    cores = os.cpu_count() - 2
+    cores = os.cpu_count() - 1
 
     dataset_dir = "D:/PaperLSTM/database/DB1_nueva_full/DB1"
     # dataset_dir = "D:/PaperLSTM/database/DB1_nueva"
