@@ -182,8 +182,8 @@ def dataframe_creation(dataset, model):
 
     dataset_df = dataset_df.reset_index()
     dataset_df = dataset_df.rename(columns={"index": "window idx"})
-    conf_matrix_total = np.sum(conf_matrix.cpu().numpy(), axis=0)
-    return dataset_df, conf_matrix_total
+    # conf_matrix_total = np.sum(conf_matrix.cpu().numpy(), axis=0)
+    return dataset_df, conf_matrix
 
 
 def test_result(df: pd.DataFrame) -> tuple[int, int, int, int]:
@@ -282,3 +282,25 @@ def trip_percentage(df: pd.DataFrame, fs: int = (60 * 64)) -> pd.Series:
     df = df.cumsum()
 
     return df
+
+
+def df_to_CM(df: pd.DataFrame) -> pd.DataFrame:
+    # Suponiendo que tu DataFrame se llama 'df'
+    # Definir las condiciones para TP, FP, FN, TF
+    df["TP"] = (df["Pred label"] == 1) & (df["True label"] == 1)
+    df["FN"] = (df["Pred label"] == 0) & (df["True label"] == 1)
+    df["FP"] = (df["Pred label"] == 1) & (df["True label"] == 0)
+    df["TN"] = (df["Pred label"] == 0) & (df["True label"] == 0)
+
+    # Crear una columna para TP + FN
+    df["TP + FN"] = df["TP"] + df["FN"]
+
+    # Agrupar por event_idx y calcular las sumas
+    result = (
+        df.groupby("event_idx")
+        .agg({"TP": "sum", "FP": "sum", "TN": "sum", "FN": "sum", "TP + FN": "sum"})
+        .reset_index()
+    )
+
+    # Eliminar la columna 'event_idx' del resultado
+    return result.drop(columns=["event_idx"])
