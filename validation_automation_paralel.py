@@ -39,7 +39,7 @@ def relay_validation(
     model.load_state_dict(torch.load(f"./models/automation/R{i+1}_currents.pth"))
     signal_names = signals[(relay_number - 1) * 3 : (relay_number - 1) * 3 + 3]
     dataset_validation = tf.ExistingDataset(dataset_params, signal_names)
-    dataset_df, conf_matrix_total = de.dataframe_creation(dataset_validation, model)
+    dataset_df, conf_matrix = de.dataframe_creation(dataset_validation, model)
 
     dataset_df.to_parquet(f"parquet_data/automation/R{relay_number}_df.parquet")
     conf_matrix_df = pd.DataFrame(
@@ -47,13 +47,9 @@ def relay_validation(
     )
     conf_matrix_df.to_parquet(f"parquet_data/automation/R{relay_number}_CM_df.parquet")
     np.save(
-        f"parquet_data/automation/R{relay_number}_CM.npy",
-        conf_matrix_total.cpu(),
+        f"parquet_data/automation/R{relay_number}_10_CM.npy",
+        conf_matrix,
     )
-
-
-def print_validation(val):
-    print(val)
 
 
 if __name__ == "__main__":
